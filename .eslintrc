@@ -1,0 +1,43 @@
+{
+  "max-len": [
+    2,
+    80,
+    4,
+    {
+      "ignoreComments": true,
+      "ignoreUrls": true,
+      "ignorePattern": "^\\s*var\\s.+=\\s*require\\s*\\("
+    }
+  ],
+  "rules": {
+    "strict": [
+      2,
+      "global"
+    ],
+    "indent": [
+      2,
+      2,
+      {
+        "SwitchCase": 1
+      }
+    ],
+    "quotes": [
+      2,
+      "single"
+    ],
+    "linebreak-style": [
+      2,
+      "unix"
+    ],
+    "semi": [
+      2,
+      "never"
+    ],
+    "handle-callback-err": 2
+  },
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "extends": "eslint:recommended"
+}
