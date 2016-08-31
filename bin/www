@@ -87,4 +87,5 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port
   debug('Listening on ' + bind)
+  console.log('Foryoung backend system starts at http://localhost:' + addr.port)
 }

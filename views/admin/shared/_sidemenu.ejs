@@ -1,0 +1,22 @@
+<div class="col-sm-3 col-md-2 sidebar">
+  <ul class="nav nav-sidebar">
+    <% if (currPage == 'dashboard') { %> 
+      <li class="active">
+    <% } else { %>
+      <li>
+    <% } %><a href="/admin/">首页</a></li>
+
+    <% if (currPage == 'parcel') { %> 
+      <li class="active">
+    <% } else { %>
+      <li>
+    <% } %><a href="/admin/parcel">快递信息管理</a></li>
+
+    <% if (currPage == 'userparcel') { %> 
+      <li class="active">
+    <% } else { %>
+      <li>
+    <% } %><a href="/admin/userparcel">用户记录页</a></li>
+    
+  </ul>
+</div>
