@@ -1,1 +1,170 @@
-id upload page
+<% include shared/_header %>
+
+<% include shared/_menu %>
+    
+<div class="jumbotron">
+  <form id="uploadForm" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="receiverName">收件人姓名</label>
+      <input type="text" class="form-control" id="receiverName" name="receiverName" placeholder="Receiver Name">
+    </div>
+    <div class="form-group">
+      <label for="receiverId">收件人身份证件号码</label>
+      <input type="text" class="form-control" onkeyup="upperContent(this);" id="receiverId" name="receiverId" placeholder="Receiver ID Number">
+    </div>
+    <div class="form-group">
+      <label for="receiverMobile">收件人手机号</label>
+      <input type="text" class="form-control" id="receiverMobile" name="receiverMobile" placeholder="Receiver Mobile Number">
+    </div>
+    
+    <div class="form-group">
+      <label for="idFront">身份证正面</label>
+      <input type="file" id="idFront" name="idPhoto">
+      <span class="description-text">支持文件格式：.jpg, .jpeg, .png, .gif, .bmp，上传文件请不要超出2Mb大小</span>
+      <br /><br />
+      <img class="id_img" src="/images/id_front.png" alt="id_front" />
+    </div>
+
+    <div class="form-group">
+      <label for="idBack">身份证反面</label>
+      <input type="file" id="idBack" name="idPhoto">
+      <span class="description-text">支持文件格式：.jpg, .jpeg, .png, .gif, .bmp，上传文件请不要超出2Mb大小</span>
+      <br /><br />
+      <img class="id_img" src="/images/id_back.png" alt="id_back" />
+    </div>
+
+    <br /><br />
+    <button type="submit" id="submit" class="btn btn-primary">确认上传</button>
+  </form>
+</div>
+<br /><br />
+
+<% include shared/_scripts %>
+<script>
+
+var idFrontOk = false
+var idBackOk = false
+
+function upperContent(obj) {
+  var str = obj.value;
+  var result = "";
+  for (var i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) == 12288) {
+      result += String.fromCharCode(str.charCodeAt(i) - 12256);
+      continue;
+    }
+    if (str.charCodeAt(i) > 65280 && str.charCodeAt(i) < 65375) result += String.fromCharCode(str.charCodeAt(i) - 65248);
+    else result += String.fromCharCode(str.charCodeAt(i));
+  }
+  result = result.trim();
+  result = result.toUpperCase();
+  obj.value = result;
+}
+
+$(document).ready(function () {
+
+  function validateFields () {
+    var receiverName = $('#receiverName').val().replace(/ /g, '')
+    var receiverId = $('#receiverId').val().replace(/ /g, '')
+    var receiverMobile = $('#receiverMobile').val().replace(/ /g, '')
+
+    if (!receiverName || !receiverId || !receiverMobile) {
+      alert('所有项均为必填，请完整填写内容以便海关查验')
+      return false
+    }
+    if (!/^\W{2,20}/.test(receiverName)) {
+      alert('请确认您填写了正确的收件人姓名')
+      return false
+    }
+    if (receiverId.length < 15 || receiverId.length > 18) {
+      alert('请输入收件人的15至18位身份证号')
+      return false
+    } 
+    var reg = /(^\d{15}$)|(^\d{17}(\d|X)$)/
+    if (reg.test(receiverId) === false) {
+      alert('请输入有效的收件人身份证号')
+      return false
+    }
+    var mreg = /(^[0-9]*[1-9][0-9]*$)/
+    if (receiverMobile.length != 11 || mreg.test(receiverMobile) === false) {
+      alert('请输入收件人的11位手机号码')
+      return false
+    }
+    return true
+  }
+
+  function validateFile (e, okItem) {
+    if(okItem === 'front') {
+      idFrontOk = false 
+    } else if(okItem === 'back') {
+      idBackOk = false
+    }
+    
+    var file = e.currentTarget.files[0]
+    var filename = file.name.toLowerCase()
+    if (!filename || !(filename.endsWith('.jpg') || filename.endsWith('.jpeg')
+      || filename.endsWith('.png') || filename.endsWith('.gif') || filename.endsWith('.bmp') 
+      || filename.endsWith('.pdf') )) {
+      return alert('对不起，文件格式不符合，请尝试上传jpg, jpeg, png, gif等常用图片格式文件，谢谢')
+    }
+    
+    var filesize = ((file.size/1024)/1024).toFixed(2) // MB
+    if (filesize > 2) {
+      return alert('对不起，图片大小不能超过2Mb')
+    }
+
+    if(okItem === 'front') {
+      idFrontOk = true 
+    } else if(okItem === 'back') {
+      idBackOk = true
+    }
+  }
+
+  $('#idFront').on('change', function (e) {
+    validateFile(e, 'front')
+  })
+
+  $('#idBack').on('change', function (e) {
+    validateFile(e, 'back')
+  })
+
+  $('form#uploadForm').submit(function(e){
+
+    e.preventDefault()
+    // Validate fields
+    if (!validateFields()) {
+      return 
+    }
+
+    // validate files
+    if (!idFrontOk || !idBackOk) {
+      return alert("请您再次确认您上传了正确的身份证文件，如果您确认文件无误，请刷新页面重试")
+    }
+
+    var formData = new FormData($(this)[0]);
+    $.ajax({
+      url: '/upload',
+      type: 'POST',
+      data: formData,
+      error: function (err) {
+        alert('对不起，文件上传失败，请刷新页面后重试')
+        return location.href="/"
+      },
+      success: function (data) {
+        if (data.res === 'success') {
+          alert('上传成功，谢谢您使用本系统')
+          return location.href="/"
+        } else {
+          return alert('对不起，上传失败：' + data.res)
+        }
+      },
+      cache: false,
+      contentType: false,
+      processData: false
+    })
+  })
+})
+
+</script>
+
+<% include shared/_footer %>

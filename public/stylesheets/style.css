@@ -7,6 +7,19 @@ body {
   padding-top: 50px;
 }
 
+.pop-img {
+  font-size: 28px;
+}
+
+thead {
+  background-color: #ddd;
+  font-weight: bold
+}
+
+tbody td {
+  text-align: center; 
+  vertical-align: middle !important
+}
 
 /*
  * Global add-ons

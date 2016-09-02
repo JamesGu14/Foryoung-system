@@ -8,7 +8,7 @@ passport.use(new LocalStrategy(
   function (username, password, done) {
     let query = `select * from fy_adminuser where username = '${username}' and pwd = '${password}'`
 
-    mySqlConn.query(query, function (err, rows, fields) {
+    mySqlConn.query(query, function (err, rows) {
 
       if (err) {
         return done(err)

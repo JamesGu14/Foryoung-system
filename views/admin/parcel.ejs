@@ -1,7 +1,138 @@
 <% include shared/_header %>
 
 <% include shared/_sidemenu %>
+<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+  <h1 class="page-header">新增快递记录</h1>
+  <form class="form-inline" id="parcelForm">
+    <table class="table">
+      <thead>
+        <tr>
+          <td>编号</td>
+          <td style="width: 30%">快递单号</td>
+          <td style="width: 20%">收件人姓名</td>
+          <td style="width: 45%">收件人身份证号</td>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr>
+          <td>1</td>
+          <td><input type="text" class="form-control" style="width: 100%" id="parcelNo1" name="parcelNo1"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientName1" name="clientName1"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientIdNo1" name="clientIdNo1"></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><input type="text" class="form-control" style="width: 100%" id="parcelNo2" name="parcelNo2"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientName2" name="clientName2"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientIdNo2" name="clientIdNo2"></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><input type="text" class="form-control" style="width: 100%" id="parcelNo3" name="parcelNo3"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientName3" name="clientName3"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientIdNo3" name="clientIdNo3"></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><input type="text" class="form-control" style="width: 100%" id="parcelNo4" name="parcelNo4"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientName4" name="clientName4"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientIdNo4" name="clientIdNo4"></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><input type="text" class="form-control" style="width: 100%" id="parcelNo5" name="parcelNo5"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientName5" name="clientName5"></td>
+          <td><input type="text" class="form-control" style="width: 100%" id="clientIdNo5" name="clientIdNo5"></td>
+        </tr>
+      </tbody>
+    </table>
+    <p id="addLines" class="btn btn-default">增加输入行</p>
+    <p id="addTenLines" class="btn btn-default">增加10行</p>
+    <br /><br />
+    <button type="submit" id="submit" class="btn btn-primary">确认全部录入（空白行将被忽略）</button>
+  </form>
+</div>
 
+<% include shared/_scripts %>
 
+<script>
+var lines = 5
+$(document).ready(function () {
+  $('#addLines').click(function () {
+    lines++
+    $('#tbody').append(`<tr> 
+      <td>${lines}</td>
+      <td><input type="text" class="form-control" style="width: 100%" id="parcelNo${lines}" name="parcelNo${lines}"></td>
+      <td><input type="text" class="form-control" style="width: 100%" id="clientName${lines}" name="clientName${lines}"></td>
+      <td><input type="text" class="form-control" style="width: 100%" id="clientIdNo${lines}" name="clientIdNo${lines}"></td>
+    </tr>`)
+  })
+  $('#addTenLines').click(function () {
+    for (var m = 0; m < 10; m++) {
+      lines++
+      $('#tbody').append(`<tr> 
+        <td>${lines}</td>
+        <td><input type="text" class="form-control" style="width: 100%" id="parcelNo${lines}" name="parcelNo${lines}"></td>
+        <td><input type="text" class="form-control" style="width: 100%" id="clientName${lines}" name="clientName${lines}"></td>
+        <td><input type="text" class="form-control" style="width: 100%" id="clientIdNo${lines}" name="clientIdNo${lines}"></td>
+      </tr>`)
+    }
+  })
+  $('form#parcelForm').submit(function(e) {
+    e.preventDefault()
+    var lines = $('#tbody').find("tr")
+    var records = []
+    for (var i = 0; i < lines.length; i++) {
+      if (!$(`#parcelNo${i+1}`).val() || !$(`#clientName${i+1}`).val()
+        || !$(`#clientIdNo${i+1}`).val()) {
+        continue
+      }
+      let parcel = {
+        parcelNo: $(`#parcelNo${i+1}`).val(),
+        clientName: $(`#clientName${i+1}`).val(),
+        clientIdNo: $(`#clientIdNo${i+1}`).val()
+      }
+      if (!isValidId(parcel.clientIdNo)) {
+        return alert(`第${i + 1}行，身份证格式不合法，请核实`)
+      }
+      if (!/^\W{2,20}/.test(parcel.clientName)) {
+        return alert(`第${i + 1}行，收件人姓名不合法，请核实`)
+      }
+      records.push(parcel)
+    }
+    debugger
+
+    $.ajax({
+      url: '/admin/parcel/add',
+      type: 'POST',
+      data: {
+        parcels: records
+      },
+      error: function (err) {
+        alert('对不起，录入失败，请刷新页面后重试')
+      },
+      success: function (data) {
+        if (data.res === 'success') {
+          alert('数据录入成功！')
+          return location.href="/admin/userparcel"
+        } else {
+          return alert('对不起，录入失败：' + data.res)
+        }
+      }
+    })
+  })
+})
+
+function isValidId(receiverId) {
+  if (receiverId.length < 15 || receiverId.length > 18) {
+    return false
+  } 
+  var reg = /(^\d{15}$)|(^\d{17}(\d|X)$)/
+  if (reg.test(receiverId) === false) {
+    return false
+  }
+  return true
+}
+</script>
 
 <% include shared/_footer %>

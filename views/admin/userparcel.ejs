@@ -1,7 +1,99 @@
 <% include shared/_header %>
+<link rel="stylesheet" href="/stylesheets/jquery.fancybox.css?v=2.1.5" type="text/css" media="screen" />
 
 <% include shared/_sidemenu %>
+<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+  <h1 class="page-header">快递记录管理</h1>
+  <table class="table table-bordered table-hover">
+    <thead>
+      <tr>
+        <td style="width:12px;">#</td>
+        <td style="width:40px; text-align:center">创建时间</td>
+        <td style="width:100px; text-align:center">快递号</td>
+        <td style="width:50px; text-align:center">姓名</td>
+        <td style="width:50px; text-align:center">收件人身份证</td>
+        <td style="width:50px; text-align:center">ID-正面</td>
+        <td style="width:50px; text-align:center">ID-反面</td>
+        <td style="width:50px; text-align:center">状态</td>
+        <td style="width:120px; text-align:center">操作</td>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      <% for (var i = 0; i < parcels.length; i++ ) { 
+        var parcel = parcels[i]  
+        var createdAt = parcel.createdAt.getDate() + '/' + (parcel.createdAt.getMonth() + 1) + '/' +
+          parcel.createdAt.getFullYear() + ' ' + parcel.createdAt.getHours() + ':' +
+          parcel.createdAt.getMinutes() + ':' + parcel.createdAt.getSeconds()
+        %>
+        <tr>
+          <td style="text-align: left"><%=i+1 %></td>
+          <td><%=createdAt %></td>
+          <td><%=parcel.parcelNo %></td>
+          <td><%=parcel.clientName %></td>
+          <td><%=parcel.clientIdNo %></td>
+          <td>
+            <% if (parcel.frontPhotoPath && parcel.frontPhotoPath.length > 0) { %>
+              <a class="pop-img" href="<%='/' + parcel.frontPhotoPath %>">
+                <span class="glyphicon glyphicon-picture" aria-hidden="true"></span>
+              </a>
+            <% } else { %>
+              <span>未上传</span>
+            <% } %>
+          </td>
+          <td>
+            <% if (parcel.backPhotoPath && parcel.backPhotoPath.length > 0) { %>
+              <a class="pop-img" href="<%='/' + parcel.backPhotoPath %>">
+                <span class="glyphicon glyphicon-picture" aria-hidden="true"></span>
+              </a>
+            <% } else { %>
+              <span>未上传</span>
+            <% } %>
+          </td>
+          <td><%=parcel.status %></td>
+          <td>
+            <a onclick="edit(<%=parcel %>)" style="cursor: pointer">编辑</a>&nbsp;&nbsp;
+            <a onclick="deleteParcel(<%=parcel.id %>, <%=parcel.parcelNo || 0 %>)" style="cursor: pointer">删除</a>
+          </td>
+        <tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
 
+<% include shared/_scripts %>
 
+<!-- Add fancyBox -->
+
+<script type="text/javascript" src="/javascripts/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+<script>
+$(document).ready(function () {
+  $(".pop-img").fancybox({
+    openEffect	: 'elastic',
+    closeEffect	: 'elastic'
+  })
+})
+
+function deleteParcel(id, parcelNo) {
+  var r = confirm('确定要删除快递号：' + parcelNo + ' 么？')
+  if (r) {
+    $.ajax({
+      url: '/admin/userparcel/delete/' + id,
+      type: 'DELETE',
+      success: function (data) {
+        if (data.res = 'success') {
+          alert('成功删除！')
+          return location.href = "/admin/userparcel"
+        }
+        return alert('删除失败：' + data.res)
+      },
+      error: function (err) {
+        return alert('Error occurred: ' + err.message)
+      }
+    })
+  }
+}
+
+</script>
 
 <% include shared/_footer %>

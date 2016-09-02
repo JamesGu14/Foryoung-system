@@ -15,6 +15,7 @@ var routes = require('./routes/admin/index')
 var users = require('./routes/admin/users')
 var parcels = require('./routes/admin/parcel')
 var userparcels = require('./routes/admin/userparcel')
+var unmatched = require('./routes/admin/unmatched')
 
 var app = express()
 
@@ -42,14 +43,13 @@ app.use('/', clients)
 app.use('/admin', routes)
 app.use('/admin/parcel', parcels)
 app.use('/admin/userparcel', userparcels)
+app.use('/admin/unmatched', unmatched)
 app.use('/admin/users', users)
 
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found')
-  err.status = 404
-  next(err)
+app.use(function(req, res) {
+  return res.render('notfound', {})
 })
 
 // error handlers

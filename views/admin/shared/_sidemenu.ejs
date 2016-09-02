@@ -10,13 +10,19 @@
       <li class="active">
     <% } else { %>
       <li>
-    <% } %><a href="/admin/parcel">快递信息管理</a></li>
+    <% } %><a href="/admin/parcel">新增快递信息</a></li>
 
     <% if (currPage == 'userparcel') { %> 
       <li class="active">
     <% } else { %>
       <li>
-    <% } %><a href="/admin/userparcel">用户记录页</a></li>
+    <% } %><a href="/admin/userparcel">所有快递记录</a></li>
+
+    <% if (currPage == 'unmatched') { %> 
+      <li class="active">
+    <% } else { %>
+      <li>
+    <% } %><a href="/admin/unmatched">未配对的身份证</a></li>
     
   </ul>
 </div>
