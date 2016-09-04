@@ -4,11 +4,12 @@
 <% include shared/_sidemenu %>
 <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
   <h1 class="page-header">快递记录管理</h1>
+  <div style="text-align: right" id="paging"></div>
   <table class="table table-bordered table-hover">
     <thead>
       <tr>
         <td style="width:12px;">#</td>
-        <td style="width:40px; text-align:center">创建时间</td>
+        <td style="width:30px; text-align:center">创建时间</td>
         <td style="width:100px; text-align:center">快递号</td>
         <td style="width:50px; text-align:center">姓名</td>
         <td style="width:50px; text-align:center">收件人身份证</td>
@@ -19,46 +20,75 @@
       </tr>
     </thead>
     <tbody id="tbody">
-      <% for (var i = 0; i < parcels.length; i++ ) { 
-        var parcel = parcels[i]  
-        var createdAt = parcel.createdAt.getDate() + '/' + (parcel.createdAt.getMonth() + 1) + '/' +
-          parcel.createdAt.getFullYear() + ' ' + parcel.createdAt.getHours() + ':' +
-          parcel.createdAt.getMinutes() + ':' + parcel.createdAt.getSeconds()
-        %>
-        <tr>
-          <td style="text-align: left"><%=i+1 %></td>
-          <td><%=createdAt %></td>
-          <td><%=parcel.parcelNo %></td>
-          <td><%=parcel.clientName %></td>
-          <td><%=parcel.clientIdNo %></td>
-          <td>
-            <% if (parcel.frontPhotoPath && parcel.frontPhotoPath.length > 0) { %>
-              <a class="pop-img" href="<%='/' + parcel.frontPhotoPath %>">
-                <span class="glyphicon glyphicon-picture" aria-hidden="true"></span>
-              </a>
-            <% } else { %>
-              <span>未上传</span>
-            <% } %>
-          </td>
-          <td>
-            <% if (parcel.backPhotoPath && parcel.backPhotoPath.length > 0) { %>
-              <a class="pop-img" href="<%='/' + parcel.backPhotoPath %>">
-                <span class="glyphicon glyphicon-picture" aria-hidden="true"></span>
-              </a>
-            <% } else { %>
-              <span>未上传</span>
-            <% } %>
-          </td>
-          <td><%=parcel.status %></td>
-          <td>
-            <a onclick="edit(<%=parcel %>)" style="cursor: pointer">编辑</a>&nbsp;&nbsp;
-            <a onclick="deleteParcel(<%=parcel.id %>, <%=parcel.parcelNo || 0 %>)" style="cursor: pointer">删除</a>
-          </td>
-        <tr>
-      <% } %>
+      
     </tbody>
   </table>
+  <div style="text-align: right" id="paging-bottom"></div>
 </div>
+
+<div id="editModal" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">编辑包裹记录信息</h4>
+      </div>
+      <div class="modal-body">
+        <br />
+        <form class="form-horizontal" id="editParcel">
+          <div class="form-group">
+            <label for="createdAt" class="col-sm-3 control-label">创建时间</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" id="createdAt" disabled>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="parcelNo" class="col-sm-3 control-label">快递号</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" id="parcelNo">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="clientName" class="col-sm-3 control-label">收件人姓名</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" id="clientName">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="clientIdNo" class="col-sm-3 control-label">收件人身份证号</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" id="clientIdNo">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="idFrontPhoto" class="col-sm-3 control-label">ID正面</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" id="idFrontPhoto">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="idBackPhoto" class="col-sm-3 control-label">ID反面</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" id="idBackPhoto">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="status" class="col-sm-3 control-label">包裹状态</label>
+            <div class="col-sm-8">
+              <input type="text" class="form-control" id="status">
+            </div>
+          </div>
+          <br />
+          <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-10">
+              <button type="submit" class="btn btn-primary">更新包裹信息</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
 <% include shared/_scripts %>
 
@@ -67,12 +97,162 @@
 <script type="text/javascript" src="/javascripts/jquery.fancybox.pack.js?v=2.1.5"></script>
 
 <script>
+var _page
+var _size
+var _order
+
 $(document).ready(function () {
   $(".pop-img").fancybox({
     openEffect	: 'elastic',
     closeEffect	: 'elastic'
   })
+
+  // Load table with first page
+  retrieveParcels(_page, _size, _order)
 })
+
+function selectPage(page) {
+  this._page = page
+  retrieveParcels(_page, _size, _order);
+}
+
+function updateEditModalContent(parcel) {
+  $('#createdAt').val(formatDateWithTime(new Date(parcel.createdAt)))
+  $('#parcelNo').val(parcel.parcelNo)
+  $('#clientName').val(parcel.clientName)
+  $('#clientIdNo').val(parcel.clientIdNo)
+  $('#status').val(parcel.status)
+}
+
+function retrieveParcels(page, size, order) {
+  var url = '/admin/userparcel/list?'
+  if (page) {
+    url += `page=${page}`
+  }
+  if (size) {
+    url += `size=${size}`
+  }
+  if (order) {
+    url += `order=${order}`
+  }
+  $.get(url, function (res) {
+    if (res.res === 'success') {
+      var content = ''
+      for (var i = 0; i < res.data.length; i++) {
+        var parcel = res.data[i]
+        var createAtDate = new Date(parcel.createdAt)
+        var createdAt = formatDate(createAtDate)
+        var line = `
+          <tr>
+            <td style="text-align: left">${i+1}</td>
+            <td>${createdAt}</td>
+            <td>${parcel.parcelNo}</td>
+            <td>${parcel.clientName}</td>
+            <td>${parcel.clientIdNo}</td>
+        `
+        if (parcel.frontPhotoPath && parcel.frontPhotoPath.length > 0) { 
+          line += `
+            <td>
+              <a class="pop-img" href="${'/' + parcel.frontPhotoPath.replace('public/', '')}">
+                <span class="glyphicon glyphicon-picture" aria-hidden="true"></span>
+              </a>
+            </td>
+          `
+        } else {
+          line += '<td><span>未上传</span></td>'
+        }
+        if (parcel.backPhotoPath && parcel.backPhotoPath.length > 0) { 
+          line += `
+            <td>
+              <a class="pop-img" href="${'/' + parcel.backPhotoPath.replace('public/', '')}">
+                <span class="glyphicon glyphicon-picture" aria-hidden="true"></span>
+              </a>
+            </td>
+          `
+        } else {
+          line += '<td><span>未上传</span></td>'
+        }
+
+        line += `
+          </td>
+            <td>${parcel.status}</td>
+            <td>
+              <a onclick="editParcel(${parcel.id})" style="cursor: pointer">编辑</a>&nbsp;&nbsp;
+              <a onclick="deleteParcel(${parcel.id}, ${parcel.parcelNo || 0})" style="cursor: pointer">删除</a>
+            </td>
+          <tr>
+        `
+        content += line
+      }
+      var totalPages = res.pages
+      $('#tbody').html(content)
+      debugger;
+      // load pagers
+      var paging = getPaging(page || 1, totalPages)
+      $('#paging').html(paging)
+      $('#paging-bottom').html(paging)
+      
+    } else {
+      return alert('数据获取失败：' + res.res)
+    }
+  })
+}
+
+function getPaging(index, total) {
+  var paging = `
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+  `
+  if (index > 1) {
+    paging += `
+      <li onclick="selectPage(1)">
+        <a href="#" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+    `
+  } 
+
+  // from max(1, index-5) to min(index + 5 || total)
+  var from = Math.max(1, index - 5)
+  var to = Math.min(index + 5, total)
+  for(var i = from; i <= to; i++) {
+    if (i == index) {
+      paging += `
+        <li onclick="selectPage(${i})" class="active"><a href="#">${i}</a></li>
+      `
+    } else {
+      paging += `
+        <li onclick="selectPage(${i})"><a href="#">${i}</a></li>
+      `
+    }
+  }
+
+  if (index != total) {
+    paging += `
+      <li onclick="selectPage(${total})">
+        <a href="#" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    `
+  }
+  
+  paging += '</ul></nav>'
+  return paging   
+}
+
+function editParcel(id) {
+  var url = '/admin/userparcel/list/' + id
+  $.get(url, function (res) {
+    if (res.res === 'success') {
+      return updateEditModalContent(res.data[0])
+    } else {
+      return alert(res.res)
+    }
+  })
+  $('#editModal').modal()
+}
 
 function deleteParcel(id, parcelNo) {
   var r = confirm('确定要删除快递号：' + parcelNo + ' 么？')
@@ -83,7 +263,7 @@ function deleteParcel(id, parcelNo) {
       success: function (data) {
         if (data.res = 'success') {
           alert('成功删除！')
-          return location.href = "/admin/userparcel"
+          retrieveParcels(_page, _size, _order)
         }
         return alert('删除失败：' + data.res)
       },
@@ -93,6 +273,16 @@ function deleteParcel(id, parcelNo) {
     })
   }
 }
+
+function formatDateWithTime(date) {
+  return date.getDate() + '/' + (date.getMonth() + 1) + '/' +
+    date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds()
+}
+
+function formatDate(date) {
+  return date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear()
+}
+
 
 </script>
 

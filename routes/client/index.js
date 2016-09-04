@@ -57,7 +57,6 @@ router.post('/upload', upload.array('idPhoto', 2), function (req, res) {
   succeedAndRenameFiles(receiverId, req.files, function (newFiles) {
     let query = `update fy_parcel set frontPhotoPath = '${newFiles[0]}', backPhotoPath = '${newFiles[1]}' 
       where clientIdNo = '${receiverId.toLowerCase()}' and frontPhotoPath is null`
-    
     mySqlConn.query(query, function (err, results) {
       if (err) {
         return res.json({
@@ -66,7 +65,7 @@ router.post('/upload', upload.array('idPhoto', 2), function (req, res) {
       }
       if (results.changedRows <= 0) {
         let query = `insert into fy_unmatched_photo values (null, '${receiverName}', '${receiverId}', 
-          '${receiverMobile}', '${newFiles[0]}', '${newFiles[1]}', null)`
+          '${receiverMobile}', '${newFiles[0]}', '${newFiles[1]}', NOW())`
         mySqlConn.query(query, function (err) {
           if (err) {
             return res.json({

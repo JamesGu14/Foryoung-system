@@ -32,6 +32,47 @@ router.get('/', function(req, res) {
   })
 })
 
+/** GET single userparcel */
+router.get('/list/:id', function (req, res) {
+  
+  let query = `select * from fy_parcel where id = ${req.params.id}`
+  mySqlConn.query(query, function (err, results) {
+    if (err) {
+      return res.json({
+        res: '数据库连接失败，请重新尝试或联系系统管理员'
+      })
+    }
+    return res.json({
+      res: 'success',
+      data: results
+    })
+  })
+})
+
+/** GET userparcels by paging, ordering and pageSize */
+router.get('/list', function (req, res) {
+
+  let page = req.query.page || 1
+  let pageSize = req.query.size || 10
+  let order = req.query.order || 'desc'
+  let query = `select * from fy_parcel order by id ${order} limit ${(page-1)*pageSize}, ${pageSize};
+  select count(*) as count from fy_parcel`
+  
+  mySqlConn.query(query, function (err, results) {
+    
+    if (err) {
+      return res.json({
+        res: '数据库连接失败，请重新尝试或联系系统管理员'
+      })
+    }
+    return res.json({
+      res: 'success',
+      data: results[0],
+      pages: Math.ceil(results[1][0].count / pageSize)
+    })
+  })
+})
+
 /** DELETE userparcel in fy_parcel table */
 router.delete('/delete/:id', function (req, res) {
   
@@ -47,5 +88,11 @@ router.delete('/delete/:id', function (req, res) {
     })
   })
 })
+
+/** PUT request updating fy_parcel table */
+// router.put('/update', function (req, res) {
+
+  
+// })
 
 module.exports = router
